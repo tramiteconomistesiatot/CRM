@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+    --primary: 205 64% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 208 60% 93%;
+    --secondary-foreground: 205 64% 32%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 15% 50%;
+    --accent: 208 60% 93%;
+    --accent-foreground: 205 64% 32%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 205 64% 39%;
+    --radius: 0.5rem;
+
+    /* Tràmit brand */
+    --tramit-blue: #2272A3;
+    --tramit-blue-dark: #1A5F8A;
+    --tramit-blue-light: #E8F4FB;
+  }
+
+  .dark {
+    --background: 220 15% 10%;
+    --foreground: 210 20% 92%;
+    --card: 220 15% 13%;
+    --card-foreground: 210 20% 92%;
+    --popover: 220 15% 13%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 205 64% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 20% 18%;
+    --secondary-foreground: 210 20% 85%;
+    --muted: 215 20% 18%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 215 20% 18%;
+    --accent-foreground: 210 20% 85%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 205 64% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Smooth scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+}

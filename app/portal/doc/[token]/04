@@ -1,0 +1,33 @@
+export const dynamic = 'force-dynamic'
+
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import { TramitLogo } from '@/components/layout/logo'
+import { PortalDocClient } from '@/components/features/portal-doc-client'
+
+export default async function PortalDocPage({ params }: { params: { token: string } }) {
+  const supabase = createClient()
+
+  const { data: request } = await supabase
+    .from('document_requests')
+    .select('*, clients(name, email, phone), profiles!document_requests_created_by_fkey(full_name)')
+    .eq('token', params.token)
+    .single()
+
+  if (!request) notFound()
+
+  const isExpired = new Date(request.expires_at) < new Date()
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-tramit-blue-light via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <header className="bg-tramit-blue-dark text-white py-4 px-6">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          <TramitLogo size="sm" />
+        </div>
+      </header>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <PortalDocClient request={request} isExpired={isExpired} />
+      </div>
+    </div>
+  )
+}
