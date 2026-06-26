@@ -26,6 +26,13 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function run() {
+  const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+  if (authError) {
+    console.error('Error fetching Auth users:', authError);
+  } else {
+    console.log('Auth Users:', authData.users.map(u => ({ id: u.id, email: u.email })));
+  }
+
   const { data, error } = await supabase.from('profiles').select('*');
   if (error) {
     console.error('Error fetching profiles:', error);
