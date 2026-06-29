@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Calendar, Umbrella, Users,
   BarChart3, Settings, Home, LogOut,
   UserCircle, BookOpen, MessageSquare,
-  CheckSquare, FileText,
+  CheckSquare, FileText, FilePen,
 } from 'lucide-react'
 import { cn, getInitials } from '@/lib/utils'
 import { TramitLogo } from './logo'
@@ -35,6 +35,7 @@ const adminSections: NavSection[] = [
     items: [
       { label: 'Agenda / Cites',  href: '/dashboard/agenda',        icon: Calendar },
       { label: 'Tràmits',         href: '/dashboard/tasques',       icon: CheckSquare },
+      { label: 'Firma Digital',   href: '/dashboard/firma-digital', icon: FilePen },
     ]
   },
   {
