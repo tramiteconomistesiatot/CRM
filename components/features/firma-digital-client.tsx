@@ -60,6 +60,8 @@ export function FirmaDigitalClient({ initialDocuments, initialClients, userId }:
   const [activeTab, setActiveTab] = useState<TabKey>('pending')
   const [uploading, setUploading] = useState(false)
   const [sending, setSending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -141,10 +143,32 @@ export function FirmaDigitalClient({ initialDocuments, initialClients, userId }:
         if (selected) {
           const updated = (data.documents || []).find((d: SigningDocument) => d.id === selected.id)
           if (updated) setSelected(updated)
+          else setSelected(null)
         }
       }
     } finally {
       setRefreshing(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selected || !confirmDelete) return
+    setDeleting(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/firma/${selected.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error eliminant')
+      setDocuments(prev => prev.filter(d => d.id !== selected.id))
+      setSelected(null)
+      setConfirmDelete(false)
+      setSuccessMsg('Document eliminat correctament')
+      setTimeout(() => setSuccessMsg(null), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error eliminant el document')
+      setConfirmDelete(false)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -630,6 +654,52 @@ export function FirmaDigitalClient({ initialDocuments, initialClients, userId }:
                     </form>
                   )}
                 </>
+              )}\n\n              {/* ── Delete button ─────────────────────────────── */}
+              {selected.status !== 'signed' && (
+                <div className="border-t border-gray-100 pt-4">
+                  {!confirmDelete ? (
+                    <button
+                      onClick={() => setConfirmDelete(true)}
+                      className="w-full flex items-center justify-center gap-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-100 hover:border-red-200 rounded-xl px-4 py-2.5 transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Eliminar document
+                    </button>
+                  ) : (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2">
+                      <p className="text-xs text-red-700 font-medium text-center">
+                        ⚠️ Segur que vols eliminar aquest document?
+                      </p>
+                      <p className="text-[10px] text-red-500 text-center">
+                        S&apos;eliminarà permanentment del sistema
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setConfirmDelete(false)}
+                          className="flex-1 text-xs text-gray-600 bg-white border border-gray-200 rounded-lg py-1.5 hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel·lar
+                        </button>
+                        <button
+                          onClick={handleDelete}
+                          disabled={deleting}
+                          className="flex-1 text-xs text-white bg-red-600 hover:bg-red-700 rounded-lg py-1.5 font-medium transition-colors flex items-center justify-center gap-1"
+                        >
+                          {deleting
+                            ? <><RefreshCw className="h-3 w-3 animate-spin" /> Eliminant...</>
+                            : 'Sí, eliminar'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {selected.status === 'signed' && (
+                <div className="border-t border-gray-100 pt-3">
+                  <p className="text-[10px] text-gray-400 text-center">
+                    🔒 Els documents signats no es poden eliminar (registre legal obligatori)
+                  </p>
+                </div>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ClientDetailClient } from '@/components/features/client-detail-client'
 
@@ -12,6 +13,8 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
     .from('profiles').select('role').eq('id', user!.id).single()
   const isAdmin = profile?.role === 'admin' || profile?.role === 'supervisor'
 
+  const serviceClient = createServiceClient()
+
   const [
     { data: client },
     { data: activity },
@@ -21,6 +24,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
     { data: consents },
     { data: profiles },
     { data: expedients },
+    { data: signingDocs },
   ] = await Promise.all([
     supabase.from('clients')
       .select('*, profiles!clients_responsible_id_fkey(full_name, color)')
@@ -53,6 +57,11 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
       .eq('client_id', params.id)
       .order('year', { ascending: false })
       .order('created_at', { ascending: false }),
+    // Signing documents for this client (using service client to bypass RLS)
+    serviceClient.from('signing_documents')
+      .select('id, file_name, status, created_at, sent_at, signed_at, signed_file_url, audit_pdf_url, client_email')
+      .eq('client_id', params.id)
+      .order('created_at', { ascending: false }),
   ])
 
   if (!client) notFound()
@@ -67,6 +76,7 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
       consents={consents || []}
       profiles={profiles || []}
       expedients={expedients || []}
+      signingDocs={signingDocs || []}
       isAdmin={isAdmin}
     />
   )

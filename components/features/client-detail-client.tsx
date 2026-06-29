@@ -162,7 +162,19 @@ const CLIENT_TYPE_LABELS: Record<string, string> = {
   asociacion: 'Associació',
 }
 
-type Tab = 'activitat' | 'expedients' | 'cites' | 'tasques' | 'pressupostos' | 'ia' | 'rgpd'
+type Tab = 'activitat' | 'expedients' | 'cites' | 'tasques' | 'pressupostos' | 'ia' | 'rgpd' | 'documents'
+
+interface SigningDoc {
+  id: string
+  file_name: string
+  status: 'pending' | 'sent' | 'signed' | 'rejected' | 'expired'
+  created_at: string
+  sent_at: string | null
+  signed_at: string | null
+  signed_file_url: string | null
+  audit_pdf_url: string | null
+  client_email: string | null
+}
 
 export function ClientDetailClient({
   client,
@@ -173,6 +185,7 @@ export function ClientDetailClient({
   consents,
   profiles,
   expedients = [],
+  signingDocs = [],
   isAdmin = false,
 }: {
   client: Client
@@ -183,6 +196,7 @@ export function ClientDetailClient({
   consents: Consent[]
   profiles: Profile[]
   expedients?: Expedient[]
+  signingDocs?: SigningDoc[]
   isAdmin?: boolean
 }) {
   const [activeTab, setActiveTab] = useState<Tab>('activitat')
@@ -280,6 +294,7 @@ export function ClientDetailClient({
     { id: 'cites', label: 'Cites', count: appointments.length },
     { id: 'tasques', label: 'Tasques', count: tasks.filter(t => t.status !== 'done').length },
     { id: 'pressupostos', label: 'Pressupostos', count: quotes.length },
+    { id: 'documents', label: '✍️ Documents', count: signingDocs.length },
     { id: 'ia', label: '✨ IA' },
     { id: 'rgpd', label: 'RGPD' },
   ]
@@ -1010,6 +1025,97 @@ export function ClientDetailClient({
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {/* ── Tab: Documents Signats ─────────────────────────── */}
+          {activeTab === 'documents' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Historial de documents enviats a firmar a aquest client
+                </p>
+                <a
+                  href="/dashboard/firma-digital"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                >
+                  + Nou document
+                </a>
+              </div>
+
+              {signingDocs.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <div className="text-3xl mb-2">✍️</div>
+                    <p className="text-sm">Cap document enviat a firmar encara</p>
+                    <p className="text-xs mt-1">
+                      Ves a{' '}
+                      <a href="/dashboard/firma-digital" className="text-blue-600 hover:underline">
+                        Firma Digital
+                      </a>{' '}
+                      per pujar i enviar documents
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {signingDocs.map(doc => {
+                    const statusConfig = {
+                      pending:  { label: 'Pendent d\'enviar', color: 'text-amber-600 bg-amber-50 border-amber-200', dot: '🟡' },
+                      sent:     { label: 'Esperant firma',   color: 'text-blue-600 bg-blue-50 border-blue-200',   dot: '🔵' },
+                      signed:   { label: 'Signat ✅',         color: 'text-green-600 bg-green-50 border-green-200', dot: '🟢' },
+                      rejected: { label: 'Rebutjat',          color: 'text-red-600 bg-red-50 border-red-200',      dot: '🔴' },
+                      expired:  { label: 'Caducat',           color: 'text-gray-500 bg-gray-50 border-gray-200',   dot: '⚪' },
+                    }
+                    const cfg = statusConfig[doc.status]
+                    return (
+                      <Card key={doc.id} className="border border-gray-100">
+                        <CardContent className="py-3 px-4">
+                          <div className="flex items-start gap-3">
+                            <span className="text-lg mt-0.5">📄</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-medium text-gray-800 truncate">{doc.file_name}</p>
+                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${cfg.color}`}>
+                                  {cfg.label}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
+                                <span>Pujat {new Date(doc.created_at).toLocaleDateString('ca-ES')}</span>
+                                {doc.sent_at && <span>· Enviat {new Date(doc.sent_at).toLocaleDateString('ca-ES')}</span>}
+                                {doc.signed_at && <span>· Signat {new Date(doc.signed_at).toLocaleDateString('ca-ES')}</span>}
+                                {doc.client_email && <span>· {doc.client_email}</span>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {doc.signed_file_url && (
+                                <a
+                                  href={doc.signed_file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg px-2.5 py-1.5 font-medium transition-colors flex items-center gap-1"
+                                >
+                                  ⬇ PDF signat
+                                </a>
+                              )}
+                              {doc.audit_pdf_url && (
+                                <a
+                                  href={doc.audit_pdf_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg px-2.5 py-1.5 font-medium transition-colors"
+                                >
+                                  Auditoria
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
 
