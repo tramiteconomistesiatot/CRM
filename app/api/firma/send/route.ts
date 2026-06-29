@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const YOUSIGN_API_URL = process.env.YOUSIGN_SANDBOX === 'true'
   ? 'https://api-sandbox.yousign.app/v3'
@@ -11,11 +11,12 @@ export async function POST(request: Request) {
   try {
     const supabase = createServiceClient()
 
-    // Auth check — only admins/supervisors
-    const { data: { user } } = await supabase.auth.getUser()
+    // Auth check — only admins/supervisors (use cookie client for session)
+    const authClient = createClient()
+    const { data: { user } } = await authClient.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autoritzat' }, { status: 401 })
 
-    const { data: profile } = await supabase
+    const { data: profile } = await authClient
       .from('profiles')
       .select('role, full_name')
       .eq('id', user.id)

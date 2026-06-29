@@ -1,7 +1,5 @@
-export const dynamic = 'force-dynamic'
-
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
 
 // Secret shared with the upload agent (or manual admin uploads)
@@ -14,8 +12,8 @@ export async function POST(request: Request) {
     const isAgentUpload = UPLOAD_SECRET && authHeader === UPLOAD_SECRET
 
     if (!isAgentUpload) {
-      // Check admin session
-      const supabaseAuth = createServiceClient()
+      // Check admin session using the cookie-based client
+      const supabaseAuth = createClient()
       const { data: { user } } = await supabaseAuth.auth.getUser()
       if (!user) {
         return NextResponse.json({ error: 'No autoritzat' }, { status: 401 })
